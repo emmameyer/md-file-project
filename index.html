@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MDP Generator - All Atom MD Simultions</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --bg: #ced3db;
+        --surface: #161b22;
+        --surface2: #1c2128;
+        --border: #30363d;
+        --border-hover: #484f58;
+        --text: #e6edf3;
+        --text-muted: #7d8590;
+        --text-dim: #484f58;
+        --accent: #58a6ff;
+        --accent-glow: rgba(88,166,255,0.15);
+        --green: #3fb950;
+        --green-glow: rgba(63,185,80,0.12);
+        --amber: #d29922;
+        --mono: 'IBM Plex Mono', monospace;
+        --sans: 'IBM Plex Sans', sans-serif;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 14px;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      /* subtle grid background */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image:
+          linear-gradient(var(--border) 1px, transparent 1px),
+          linear-gradient(90deg, var(--border) 1px, transparent 1px);
+        background-size: 40px 40px;
+        opacity: 0.18;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .wrapper {
+        position: relative;
+        z-index: 1;
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem 4rem;
+      }
+
+      /* ── Header ── */
+      header {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .header-top {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+ 
+    .site-title {
+      font-family: var(--mono);
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+ 
+    .site-tag {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--green);
+      border: 1px solid var(--green);
+      padding: 2px 8px;
+      border-radius: 2px;
+      letter-spacing: 0.06em;
+    }
+ 
+    .site-desc {
+      margin-top: 0.4rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      max-width: 560px;
+    }
+ 
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+ 
+    @media (max-width: 680px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+ 
+    /* ── Panels ── */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+ 
+    .panel-header {
+      padding: 0.6rem 1rem;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+ 
+    .panel-header .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+    }
+ 
+    .panel-body {
+      padding: 1.25rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+ 
+    /* ── Form fields ── */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+ 
+    label {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+ 
+    select, input[type="number"] {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+ 
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237d8590'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 28px;
+    }
+ 
+    select:focus, input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+ 
+    select:hover, input[type="number"]:hover {
+      border-color: var(--border-hover);
+    }
+ 
+    input[type="number"]::-webkit-inner-spin-button { opacity: 0.4; }
+ 
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+ 
+    /* ── Generate button ── */
+    .btn-generate {
+      width: 100%;
+      padding: 0.7rem;
+      background: var(--accent);
+      color: #0d1117;
+      border: none;
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: background 0.15s, box-shadow 0.15s;
+      margin-top: 0.25rem;
+    }
+ 
+    .btn-generate:hover {
+      background: #79c0ff;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+ 
+    .btn-generate:active { transform: scale(0.99); }
+ 
+    /* ── Output panel ── */
+    .output-panel {
+      grid-column: 1 / -1;
+    }
+ 
+    .output-toolbar {
+      padding: 0.6rem 1rem;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+ 
+    .output-toolbar-left {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+ 
+    .output-toolbar-left .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+ 
+    .btn-copy {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 3px 12px;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+ 
+    .btn-copy:hover { color: var(--text); border-color: var(--border-hover); }
+    .btn-copy.copied { color: var(--green); border-color: var(--green); }
+ 
+    .output-code {
+      padding: 1.25rem;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.75;
+      color: var(--text);
+      white-space: pre;
+      overflow-x: auto;
+      min-height: 200px;
+      tab-size: 4;
+    }
+ 
+    /* syntax-ish coloring */
+    .line-comment { color: var(--text-dim); }
+    .line-key     { color: var(--accent); }
+    .line-val     { color: var(--green); }
+    .line-section { color: var(--amber); font-weight: 500; }
+    .placeholder  { color: var(--text-dim); font-style: italic; }
+ 
+    /* ── Footer ── */
+    footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+<div class="wrapper">
+ 
+  <header>
+    <div class="header-top">
+      <span class="site-title">mdp-gen</span>
+      <span class="site-tag">v0.1</span>
+    </div>
+    <p class="site-desc">
+      All-atom molecular dynamics parameter file generator.
+      Configure your system and download a ready-to-use <code style="color:var(--accent);font-family:var(--mono)">.mdp</code> file for GROMACS.
+    </p>
+  </header>
+ 
+  <div class="layout">
+ 
+    <!-- ── Panel 1: System & Force Field ── -->
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>system &amp; force field</div>
+      <div class="panel-body">
+        <div class="field">
+          <label>system type</label>
+          <select id="system">
+            <option value="DNA">DNA</option>
+            <option value="Protein">Protein</option>
+            <option value="RNA">RNA</option>
+            <option value="Lipid bilayer">Lipid bilayer</option>
+            <option value="Protein–DNA complex">Protein–DNA complex</option>
+            <option value="Protein–RNA complex">Protein–RNA complex</option>
+            <option value="Small molecule">Small molecule</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>force field</label>
+          <select id="ff">
+            <option value="BSC1">BSC1</option>
+            <option value="BSC0">BSC0</option>
+            <option value="OL21">OL21</option>
+            <option value="OL15">OL15</option>
+            <option value="CHARMM36m">CHARMM36m</option>
+            <option value="AMBER99SB-ILDN">AMBER99SB-ILDN</option>
+            <option value="AMBER14SB">AMBER14SB</option>
+            <option value="GROMOS96 54a7">GROMOS96 54a7</option>
+            <option value="OPLS-AA">OPLS-AA</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>water model</label>
+          <select id="water">
+            <option value="TIP3P">TIP3P</option>
+            <option value="TIP4P">TIP4P</option>
+            <option value="TIP4P/2005">TIP4P/2005</option>
+            <option value="TIP5P">TIP5P</option>
+            <option value="SPC">SPC</option>
+            <option value="SPC/E">SPC/E</option>
+            <option value="OPC">OPC</option>
+            <option value="OPC3">OPC3</option>
+          </select>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- ── Panel 2: Coupling ── -->
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>coupling</div>
+      <div class="panel-body">
+        <div class="field">
+          <label>pressure coupling (pcoupl)</label>
+          <select id="pcoupl">
+            <option value="C-rescale">C-rescale</option>
+            <option value="Parrinello-Rahman">Parrinello-Rahman</option>
+            <option value="Berendsen">Berendsen</option>
+            <option value="MTTK">MTTK</option>
+            <option value="no">No (NVT ensemble)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>temperature coupling (tcoupl)</label>
+          <select id="tcoupl">
+            <option value="V-rescale">V-rescale</option>
+            <option value="Nose-Hoover">Nose-Hoover</option>
+            <option value="Berendsen">Berendsen</option>
+            <option value="andersen">Andersen</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>reference temperature (K)</label>
+          <input type="number" id="temp" value="300" min="0" max="1000" step="10" />
+        </div>
+        <div class="field">
+          <label>reference pressure (bar)</label>
+          <input type="number" id="pres" value="1.0" min="0" max="1000" step="0.1" />
+        </div>
+      </div>
+    </div>
+ 
+    <!-- ── Panel 3: Run lengths ── -->
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>run lengths</div>
+      <div class="panel-body">
+        <div class="field">
+          <label>energy minimization (steps)</label>
+          <input type="number" id="em" value="50000" min="1000" step="5000" />
+        </div>
+        <div class="field">
+          <label>equilibration (ns)</label>
+          <input type="number" id="equil" value="10" min="0.1" step="1" />
+        </div>
+        <div class="field">
+          <label>production run (ns)</label>
+          <input type="number" id="prod" value="100" min="1" step="10" />
+        </div>
+        <div class="field">
+          <label>timestep (fs)</label>
+          <select id="dt">
+            <option value="0.002">2 fs (default)</option>
+            <option value="0.001">1 fs (with h-mass)</option>
+            <option value="0.004">4 fs (h-mass repartitioning)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+ 
+    <!-- ── Panel 4: Advanced ── -->
+    <div class="panel">
+      <div class="panel-header"><span class="dot"></span>electrostatics &amp; constraints</div>
+      <div class="panel-body">
+        <div class="field">
+          <label>electrostatics</label>
+          <select id="coulomb">
+            <option value="PME">PME (recommended)</option>
+            <option value="Reaction-Field">Reaction-Field</option>
+            <option value="Cut-off">Cut-off</option>
+          </select>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>rcoulomb (nm)</label>
+            <input type="number" id="rcoul" value="1.2" min="0.8" max="2.0" step="0.1" />
+          </div>
+          <div class="field">
+            <label>rvdw (nm)</label>
+            <input type="number" id="rvdw" value="1.2" min="0.8" max="2.0" step="0.1" />
+          </div>
+        </div>
+        <div class="field">
+          <label>constraints</label>
+          <select id="constraints">
+            <option value="h-bonds">h-bonds</option>
+            <option value="all-bonds">all-bonds</option>
+            <option value="h-angles">h-angles</option>
+            <option value="none">none</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>pbc (periodic boundary)</label>
+          <select id="pbc">
+            <option value="xyz">xyz (full 3D)</option>
+            <option value="xy">xy only (slab)</option>
+            <option value="no">no</option>
+          </select>
+        </div>
+        <button class="btn-generate" onclick="generate()">generate .mdp file</button>
+      </div>
+    </div>
+ 
+    <!-- ── Output ── -->
+    <div class="panel output-panel">
+      <div class="output-toolbar">
+        <div class="output-toolbar-left"><span class="dot"></span>output — production.mdp</div>
+        <button class="btn-copy" id="copybtn" onclick="copyMdp()">copy</button>
+      </div>
+      <div class="output-code" id="output"><span class="placeholder">; Configure parameters above and click "generate .mdp file"</span></div>
+    </div>
+ 
+  </div><!-- /layout -->
+ 
+  <footer>
+    <span>mdp-gen &mdash; GROMACS all-atom MD parameter generator</span>
+    <span>github pages &mdash; open source</span>
+  </footer>
+ 
+</div><!-- /wrapper -->
+ 
+<script>
+  function val(id) { return document.getElementById(id).value; }
+ 
+  function generate() {
+    const system   = val('system');
+    const ff       = val('ff');
+    const water    = val('water');
+    const pcoupl   = val('pcoupl');
+    const tcoupl   = val('tcoupl');
+    const temp     = val('temp');
+    const pres     = val('pres');
+    const em       = parseInt(val('em'));
+    const equil    = parseFloat(val('equil'));
+    const prod     = parseFloat(val('prod'));
+    const dt       = parseFloat(val('dt'));
+    const coulomb  = val('coulomb');
+    const rcoul    = val('rcoul');
+    const rvdw     = val('rvdw');
+    const cons     = val('constraints');
+    const pbc      = val('pbc');
+ 
+    const prodSteps  = Math.round(prod  * 1e6 / (dt * 1000));
+    const equilSteps = Math.round(equil * 1e6 / (dt * 1000));
+ 
+    const isPres = pcoupl !== 'no';
+ 
+    const lines = [
+      { type: 'comment', text: `; Production run MDP — generated by mdp-gen` },
+      { type: 'comment', text: `; System: ${system}  |  Force field: ${ff}  |  Water: ${water}` },
+      { type: 'blank' },
+      { type: 'section', text: '; Run control' },
+      { type: 'kv', key: 'integrator',         val: 'md' },
+      { type: 'kv', key: 'nsteps',              val: `${prodSteps}`, comment: `${prod} ns` },
+      { type: 'kv', key: 'dt',                  val: `${dt}`, comment: `${dt * 1000} fs timestep` },
+      { type: 'blank' },
+      { type: 'section', text: '; Output control' },
+      { type: 'kv', key: 'nstxout-compressed',  val: '5000',  comment: 'trajectory every 10 ps' },
+      { type: 'kv', key: 'nstvout',             val: '0' },
+      { type: 'kv', key: 'nstfout',             val: '0' },
+      { type: 'kv', key: 'nstlog',              val: '5000' },
+      { type: 'kv', key: 'nstenergy',           val: '5000' },
+      { type: 'blank' },
+      { type: 'section', text: '; Neighbor searching' },
+      { type: 'kv', key: 'cutoff-scheme',       val: 'Verlet' },
+      { type: 'kv', key: 'ns_type',             val: 'grid' },
+      { type: 'kv', key: 'nstlist',             val: '10' },
+      { type: 'kv', key: 'rlist',               val: rcoul },
+      { type: 'blank' },
+      { type: 'section', text: '; Electrostatics' },
+      { type: 'kv', key: 'coulombtype',         val: coulomb },
+      { type: 'kv', key: 'rcoulomb',            val: rcoul },
+      { type: 'kv', key: 'pme_order',           val: '4' },
+      { type: 'kv', key: 'fourierspacing',      val: '0.16' },
+      { type: 'blank' },
+      { type: 'section', text: '; van der Waals' },
+      { type: 'kv', key: 'vdwtype',             val: 'Cut-off' },
+      { type: 'kv', key: 'rvdw',                val: rvdw },
+      { type: 'kv', key: 'DispCorr',            val: 'EnerPres' },
+      { type: 'blank' },
+      { type: 'section', text: '; Temperature coupling' },
+      { type: 'kv', key: 'tcoupl',              val: tcoupl },
+      { type: 'kv', key: 'tc-grps',             val: 'System' },
+      { type: 'kv', key: 'tau_t',               val: '0.1' },
+      { type: 'kv', key: 'ref_t',               val: temp },
+      { type: 'blank' },
+      { type: 'section', text: '; Pressure coupling' },
+      { type: 'kv', key: 'pcoupl',              val: pcoupl },
+    ];
+ 
+    if (isPres) {
+      lines.push({ type: 'kv', key: 'pcoupltype',   val: 'isotropic' });
+      lines.push({ type: 'kv', key: 'tau_p',        val: '2.0' });
+      lines.push({ type: 'kv', key: 'ref_p',        val: pres });
+      lines.push({ type: 'kv', key: 'compressibility', val: '4.5e-5' });
+    }
+ 
+    lines.push({ type: 'blank' });
+    lines.push({ type: 'section', text: '; Periodic boundary conditions' });
+    lines.push({ type: 'kv', key: 'pbc', val: pbc });
+    lines.push({ type: 'blank' });
+    lines.push({ type: 'section', text: '; Constraints' });
+    lines.push({ type: 'kv', key: 'constraints',          val: cons });
+    lines.push({ type: 'kv', key: 'constraint_algorithm', val: 'LINCS' });
+    lines.push({ type: 'kv', key: 'lincs_iter',           val: '1' });
+    lines.push({ type: 'kv', key: 'lincs_order',          val: '4' });
+    lines.push({ type: 'blank' });
+    lines.push({ type: 'comment', text: `; Equilibration run: use nsteps = ${equilSteps} (${equil} ns)` });
+    lines.push({ type: 'comment', text: `; Energy minimization: use nsteps = ${em}` });
+    lines.push({ type: 'comment', text: `; Water model: ${water}` });
+ 
+    // Render with syntax coloring
+    const html = lines.map(l => {
+      if (l.type === 'blank')    return '';
+      if (l.type === 'comment')  return `<span class="line-comment">${esc(l.text)}</span>`;
+      if (l.type === 'section')  return `<span class="line-section">${esc(l.text)}</span>`;
+      if (l.type === 'kv') {
+        const key     = l.key.padEnd(26);
+        const comment = l.comment ? `  <span class="line-comment">; ${esc(l.comment)}</span>` : '';
+        return `<span class="line-key">${esc(key)}</span>= <span class="line-val">${esc(l.val)}</span>${comment}`;
+      }
+      return '';
+    }).join('\n');
+ 
+    document.getElementById('output').innerHTML = html;
+  }
+ 
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;');
+  }
+ 
+  function copyMdp() {
+    const el  = document.getElementById('output');
+    const txt = el.innerText;
+    navigator.clipboard.writeText(txt).then(() => {
+      const btn = document.getElementById('copybtn');
+      btn.textContent = 'copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
+
