@@ -5,76 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MDP Generator</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --bg:#f4f8ff;--surface:#e6f0ff;--surface2:#d6e6ff;
-      --border:#c3d4f7;--border-hover:#9dbcf0;
-      --text:#1e2a3a;--text-muted:#5b6b80;--text-dim:#8a97a8;
-      --accent:#6ea8fe;--accent-glow:rgba(77,163,255,0.18);
-      --green:#3fb950;--green-glow:rgba(63,185,80,0.12);
-      --amber:#d29922;
-      --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
-    }
-    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
-    
-    .wrapper{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:2rem 1.5rem 4rem}
-    header{border-bottom:1px solid var(--border);padding-bottom:1.5rem;margin-bottom:2rem}
-    .header-top{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap}
-    .site-title{font-family:var(--mono);font-size:1.4rem;font-weight:500;color:var(--accent);letter-spacing:-.02em}
-    .site-tag{font-family:var(--mono);font-size:.72rem;color:var(--green);border:1px solid var(--green);padding:2px 8px;border-radius:2px;letter-spacing:.06em}
-    .site-desc{margin-top:.4rem;color:var(--text-muted);font-size:.85rem;max-width:580px}
-    .layout{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
-    @media(max-width:680px){.layout{grid-template-columns:1fr}}
-    .panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
-    .panel-header{padding:.6rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.72rem;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem}
-    .panel-header .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
-    .panel-body{padding:1.25rem 1rem;display:flex;flex-direction:column;gap:1rem}
-    .field{display:flex;flex-direction:column;gap:4px}
-    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
-    label{font-family:var(--mono);font-size:.72rem;color:var(--text-muted);letter-spacing:.05em}
-    select,input[type=number],input[type=text]{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-family:var(--mono);font-size:.82rem;outline:none;width:100%;transition:border-color .15s;appearance:none;-webkit-appearance:none}
-    select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235b6b80'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
-    select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
-    select:hover,input:hover{border-color:var(--border-hover)}
-    input[type=number]::-webkit-inner-spin-button{opacity:.4}
-    .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
-    .toggle-row label{margin:0}
-    .yn-btns{display:flex;gap:4px}
-    .yn-btn{font-family:var(--mono);font-size:.72rem;padding:3px 12px;border:1px solid var(--border);border-radius:3px;background:var(--bg);color:var(--text-muted);cursor:pointer;transition:all .12s}
-    .yn-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
-    .yn-btn:hover:not(.active){border-color:var(--border-hover);color:var(--text)}
-    .sub-fields{display:flex;flex-direction:column;gap:.75rem;padding:.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-top:-.25rem}
-    .sub-fields.hidden{display:none}
-    .ff-note{font-family:var(--mono);font-size:.68rem;color:var(--accent);margin-top:2px;min-height:1em}
-    .btn-generate{width:100%;padding:.7rem;background:var(--accent);color:#fff;border:none;border-radius:4px;font-family:var(--mono);font-size:.82rem;font-weight:500;cursor:pointer;letter-spacing:.04em;transition:background .15s,box-shadow .15s;margin-top:.25rem}
-    .btn-generate:hover{background:#4d94f5;box-shadow:0 0 16px var(--accent-glow)}
-    .btn-generate:active{transform:scale(.99)}
-    .output-panel{grid-column:1/-1}
-    .output-toolbar{padding:.6rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem}
-    .output-toolbar-left{font-family:var(--mono);font-size:.72rem;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem}
-    .output-toolbar-left .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green-glow)}
-    .btn-copy{background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:4px;padding:3px 12px;font-family:var(--mono);font-size:.72rem;cursor:pointer;transition:color .15s,border-color .15s}
-    .btn-copy:hover{color:var(--text);border-color:var(--border-hover)}
-    .btn-copy.copied{color:var(--green);border-color:var(--green)}
-    .output-code{padding:1.25rem;font-family:var(--mono);font-size:.78rem;line-height:1.75;color:var(--text);white-space:pre;overflow-x:auto;min-height:200px}
-    .line-comment{color:var(--text-dim)}
-    .line-key{color:#2563a8}
-    .line-val{color:#1a7a3a}
-    .line-section{color:var(--amber);font-weight:500}
-    .placeholder{color:var(--text-dim);font-style:italic}
-    footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-family:var(--mono);font-size:.7rem;color:var(--text-dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
-  </style>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 <div class="wrapper">
+
   <header>
     <div class="header-top">
       <span class="site-title">mdp-gen</span>
-      <span class="site-tag">v0.2</span>
+      <span class="site-tag">v0.3</span>
     </div>
-    <p class="site-desc">All-atom molecular dynamics parameter file generator. Configure your system and download a ready-to-use <code style="color:var(--accent);font-family:var(--mono)">.mdp</code> file for GROMACS.</p>
+    <p class="site-desc">All-atom molecular dynamics parameter file generator. Configure your system and download ready-to-use <code style="color:var(--accent);font-family:var(--mono)">.mdp</code> files for GROMACS.</p>
   </header>
+
   <div class="layout">
 
     <!-- Panel 1: System & Force Field -->
@@ -254,133 +197,53 @@
             <option value="no">no</option>
           </select>
         </div>
-        <button class="btn-generate" onclick="generate()">generate .mdp file</button>
+        <button class="btn-generate" onclick="generate()">generate .mdp files</button>
       </div>
     </div>
 
     <!-- Output -->
     <div class="panel output-panel">
       <div class="output-toolbar">
-        <div class="output-toolbar-left"><span class="dot"></span>output &mdash; production.mdp</div>
-        <button class="btn-copy" id="copybtn" onclick="copyMdp()">copy</button>
+        <div class="output-toolbar-left"><span class="dot"></span>output</div>
+        <div class="output-toolbar-right">
+          <button class="btn-copy" id="copybtn" onclick="copyActive()">copy</button>
+          <button class="btn-dl"                onclick="downloadActive()">download</button>
+        </div>
       </div>
-      <div class="output-code" id="output"><span class="placeholder">; Configure parameters above and click "generate .mdp file"</span></div>
+      <div class="tab-bar">
+        <button class="tab-btn" data-tab="ions" onclick="switchTab('ions')">ions.mdp</button>
+        <button class="tab-btn" data-tab="em"   onclick="switchTab('em')">em.mdp</button>
+        <button class="tab-btn" data-tab="nvt"  onclick="switchTab('nvt')">nvt.mdp</button>
+        <button class="tab-btn" data-tab="npt"  onclick="switchTab('npt')">npt.mdp</button>
+        <button class="tab-btn active" data-tab="md" onclick="switchTab('md')">md.mdp</button>
+      </div>
+
+      <div id="pane-ions" class="tab-pane">
+        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
+      </div>
+      <div id="pane-em" class="tab-pane">
+        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
+      </div>
+      <div id="pane-nvt" class="tab-pane">
+        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
+      </div>
+      <div id="pane-npt" class="tab-pane">
+        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
+      </div>
+      <div id="pane-md" class="tab-pane active">
+        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
+      </div>
     </div>
 
   </div>
+
   <footer>
     <span>mdp-gen &mdash; GROMACS all-atom MD parameter generator</span>
     <span>github pages &mdash; open source</span>
   </footer>
 </div>
-<script>
-const FF={
-  'BSC1':           {coulomb:'PME',            rcoul:1.2,rvdw:1.2,tcoupl:'V-rescale',  pcoupl:'Parrinello-Rahman',constraints:'h-bonds',water:'TIP3P', dispCorr:'EnerPres',note:'PME 1.2 nm, TIP3P, V-rescale, P-R barostat'},
-  'BSC0':           {coulomb:'PME',            rcoul:1.2,rvdw:1.2,tcoupl:'V-rescale',  pcoupl:'Parrinello-Rahman',constraints:'h-bonds',water:'TIP3P', dispCorr:'EnerPres',note:'PME 1.2 nm, TIP3P, V-rescale, P-R barostat'},
-  'OL21':           {coulomb:'PME',            rcoul:1.2,rvdw:1.2,tcoupl:'V-rescale',  pcoupl:'Parrinello-Rahman',constraints:'h-bonds',water:'TIP3P', dispCorr:'EnerPres',note:'PME 1.2 nm, TIP3P — RNA-optimised'},
-  'OL15':           {coulomb:'PME',            rcoul:1.2,rvdw:1.2,tcoupl:'V-rescale',  pcoupl:'Parrinello-Rahman',constraints:'h-bonds',water:'TIP3P', dispCorr:'EnerPres',note:'PME 1.2 nm, TIP3P — DNA-optimised'},
-  'CHARMM36m':      {coulomb:'PME',            rcoul:1.2,rvdw:1.2,tcoupl:'Nose-Hoover',pcoupl:'Parrinello-Rahman',constraints:'h-bonds',water:'TIP3P', dispCorr:'no',      note:'PME 1.2 nm, Nose-Hoover, no DispCorr'},
-  'AMBER99SB-ILDN': {coulomb:'PME',            rcoul:1.0,rvdw:1.0,tcoupl:'V-rescale',  pcoupl:'Parrinello-Rahman',constraints:'h-bonds',water:'TIP3P', dispCorr:'EnerPres',note:'PME 1.0 nm cutoffs, TIP3P'},
-  'AMBER14SB':      {coulomb:'PME',            rcoul:1.0,rvdw:1.0,tcoupl:'V-rescale',  pcoupl:'Parrinello-Rahman',constraints:'h-bonds',water:'TIP3P', dispCorr:'EnerPres',note:'PME 1.0 nm, TIP3P, EnerPres DispCorr'},
-  'GROMOS96-54a7':  {coulomb:'Reaction-Field', rcoul:1.4,rvdw:1.4,tcoupl:'Berendsen',  pcoupl:'Berendsen',         constraints:'h-bonds',water:'SPC',  dispCorr:'no',      note:'RF 1.4 nm, SPC water, Berendsen coupling'},
-  'OPLS-AA':        {coulomb:'PME',            rcoul:1.0,rvdw:1.0,tcoupl:'V-rescale',  pcoupl:'Parrinello-Rahman',constraints:'h-bonds',water:'TIP4P', dispCorr:'EnerPres',note:'PME 1.0 nm, TIP4P, EnerPres DispCorr'},
-};
-const TM={
-  pcoupl:  {sub:'pcoupl-sub',  yes:'pc-yes',no:'pc-no'},
-  tcoupl:  {sub:'tcoupl-sub',  yes:'tc-yes',no:'tc-no'},
-  rcoulomb:{sub:'rcoulomb-sub',yes:'rc-yes',no:'rc-no'},
-  rvdw:    {sub:'rvdw-sub',    yes:'rv-yes',no:'rv-no'},
-};
-function applyFFDefaults(){
-  const ff=document.getElementById('ff').value;
-  const d=FF[ff]; if(!d) return;
-  setSel('coulomb',d.coulomb); setSel('water',d.water);
-  setSel('tcoupl',d.tcoupl);   setSel('pcoupl',d.pcoupl);
-  setSel('constraints',d.constraints);
-  document.getElementById('rcoul').value=d.rcoul;
-  document.getElementById('rvdw').value=d.rvdw;
-  document.getElementById('ff-note').textContent=d.note?'-> '+d.note:'';
-}
-function setSel(id,v){
-  const el=document.getElementById(id); if(!el) return;
-  for(let i=0;i<el.options.length;i++) if(el.options[i].value===v){el.selectedIndex=i;return;}
-}
-function toggleSection(key,show){
-  const m=TM[key];
-  document.getElementById(m.sub).classList.toggle('hidden',!show);
-  document.getElementById(m.yes).classList.toggle('active', show);
-  document.getElementById(m.no ).classList.toggle('active',!show);
-}
-function v(id){return document.getElementById(id).value;}
-function isOn(key){return !document.getElementById(TM[key].sub).classList.contains('hidden');}
-function generate(){
-  const system=v('system'),ff=v('ff'),water=v('water');
-  const em=parseInt(v('em')),equil=parseFloat(v('equil')),prod=parseFloat(v('prod')),dt=parseFloat(v('dt'));
-  const coulomb=v('coulomb'),cons=v('constraints'),pbc=v('pbc');
-  const usePc=isOn('pcoupl'),useTc=isOn('tcoupl'),useRc=isOn('rcoulomb'),useRv=isOn('rvdw');
-  const pcoupl=usePc?v('pcoupl'):'no', tcoupl=useTc?v('tcoupl'):'no';
-  const pres=v('pres'),taup=v('taup'),compress=v('compress'),temp=v('temp'),taut=v('taut');
-  const rcoul=useRc?v('rcoul'):null, rvdw=useRv?v('rvdw'):null;
-  const dispCorr=(FF[ff]||{}).dispCorr||'EnerPres';
-  const prodS=Math.round(prod*1e6/(dt*1000)), equilS=Math.round(equil*1e6/(dt*1000));
-  const L=[];
-  const c=(t)=>L.push({t:'c',x:t}), s=(t)=>L.push({t:'s',x:t}), b=()=>L.push({t:'b'});
-  const kv=(k,val,cm)=>L.push({t:'kv',k,val,cm});
-  c('; Production run MDP -- generated by mdp-gen');
-  c('; System: '+system+'  |  Force field: '+ff+'  |  Water: '+water);
-  b();s('; Run control');
-  kv('integrator','md'); kv('nsteps',prodS,prod+' ns'); kv('dt',dt,dt*1000+' fs timestep');
-  b();s('; Output control');
-  kv('nstxout-compressed','5000','trajectory every 10 ps');
-  kv('nstvout','0');kv('nstfout','0');kv('nstlog','5000');kv('nstenergy','5000');
-  b();s('; Neighbor searching');
-  kv('cutoff-scheme','Verlet');kv('ns_type','grid');kv('nstlist','10');
-  if(rcoul) kv('rlist',rcoul);
-  b();s('; Electrostatics');
-  kv('coulombtype',coulomb);
-  if(rcoul) kv('rcoulomb',rcoul);
-  if(coulomb==='PME'){kv('pme_order','4');kv('fourierspacing','0.16');}
-  if(coulomb==='Reaction-Field') kv('epsilon-rf','0','tin-foil BC');
-  b();s('; van der Waals');
-  kv('vdwtype','Cut-off');
-  if(rvdw) kv('rvdw',rvdw);
-  kv('DispCorr',dispCorr);
-  b();s('; Temperature coupling');
-  kv('tcoupl',tcoupl);
-  if(useTc){kv('tc-grps','System');kv('tau_t',taut);kv('ref_t',temp);}
-  b();s('; Pressure coupling');
-  kv('pcoupl',pcoupl);
-  if(usePc){kv('pcoupltype','isotropic');kv('tau_p',taup);kv('ref_p',pres);kv('compressibility',compress);}
-  b();s('; Periodic boundary conditions');kv('pbc',pbc);
-  b();s('; Constraints');
-  kv('constraints',cons);kv('constraint_algorithm','LINCS');kv('lincs_iter','1');kv('lincs_order','4');
-  b();
-  c('; Equilibration run: use nsteps = '+equilS+' ('+equil+' ns)');
-  c('; Energy minimization: use nsteps = '+em);
-  c('; Water model: '+water);
-  const html=L.map(l=>{
-    if(l.t==='b') return '';
-    if(l.t==='c') return '<span class="line-comment">'+esc(l.x)+'</span>';
-    if(l.t==='s') return '<span class="line-section">'+esc(l.x)+'</span>';
-    if(l.t==='kv'){
-      const k=l.k.padEnd(26);
-      const cm=l.cm?'  <span class="line-comment">; '+esc(l.cm)+'</span>':'';
-      return '<span class="line-key">'+esc(k)+'</span>= <span class="line-val">'+esc(l.val)+'</span>'+cm;
-    }
-    return '';
-  }).join('\n');
-  document.getElementById('output').innerHTML=html;
-}
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function copyMdp(){
-  const txt=document.getElementById('output').innerText;
-  navigator.clipboard.writeText(txt).then(()=>{
-    const btn=document.getElementById('copybtn');
-    btn.textContent='copied!';btn.classList.add('copied');
-    setTimeout(()=>{btn.textContent='copy';btn.classList.remove('copied');},2000);
-  });
-}
-applyFFDefaults();
-</script>
+
+<script src="parameters.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
