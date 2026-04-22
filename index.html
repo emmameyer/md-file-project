@@ -141,6 +141,7 @@
           <div class="field">
             <label>pcoupl algorithm</label>
             <select id="pcoupl">
+              <option value="Automated (per forcefield)">Automated</option>
               <option value="C-rescale">C-rescale</option>
               <option value="Parrinello-Rahman">Parrinello-Rahman</option>
               <option value="Berendsen">Berendsen</option>
@@ -167,6 +168,7 @@
           <div class="field">
             <label>tcoupl algorithm</label>
             <select id="tcoupl">
+              <option value="Automated (per forcefield)">Automated</option>
               <option value="V-rescale">V-rescale</option>
               <option value="Nose-Hoover">Nose-Hoover</option>
               <option value="Berendsen">Berendsen</option>
@@ -213,7 +215,7 @@
         </div>
         <div class="field">
           <div class="toggle-row">
-            <label>rcoulomb cutoff</label>
+            <label>specify rcoulomb cutoff</label>
             <div class="yn-btns">
               <button class="yn-btn active" id="rc-yes" onclick="toggleSection('rcoulomb',true)">yes</button>
               <button class="yn-btn"        id="rc-no"  onclick="toggleSection('rcoulomb',false)">no</button>
@@ -225,7 +227,7 @@
         </div>
         <div class="field">
           <div class="toggle-row">
-            <label>rvdw cutoff</label>
+            <label>specify rvdw cutoff</label>
             <div class="yn-btns">
               <button class="yn-btn active" id="rv-yes" onclick="toggleSection('rvdw',true)">yes</button>
               <button class="yn-btn"        id="rv-no"  onclick="toggleSection('rvdw',false)">no</button>
