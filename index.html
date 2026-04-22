@@ -150,7 +150,7 @@
           </div>
           <div class="field-row">
             <div class="field"><label>ref pressure (bar)</label><input type="number" id="pres" value="1.0" min="0" max="1000" step="0.1"/></div>
-            <div class="field"><label>tau_p (ps)</label><input type="number" id="taup" value="2.0" min="0.1" step="0.5"/></div>
+            <div class="field"><label>tau_p (ps)</label><input type="number" id="taup" value="2.0" min="0" step="0.5"/></div>
           </div>
           <div class="field"><label>compressibility (bar^-1)</label><input type="text" id="compress" value="4.5e-5"/></div>
         </div>
@@ -177,7 +177,7 @@
           </div>
           <div class="field-row">
             <div class="field"><label>ref temperature (K)</label><input type="number" id="temp" value="300" min="0" max="1000" step="10"/></div>
-            <div class="field"><label>tau_t (ps)</label><input type="number" id="taut" value="0.1" min="0.01" step="0.05"/></div>
+            <div class="field"><label>tau_t (ps)</label><input type="number" id="taut" value="0.1" min="0" step="0.05"/></div>
           </div>
         </div>
       </div>
@@ -188,7 +188,7 @@
       <div class="panel-header"><span class="dot"></span>run lengths</div>
       <div class="panel-body">
         <div class="field"><label>energy minimization (steps)</label><input type="number" id="em" value="50000" min="1000" step="5000"/></div>
-        <div class="field"><label>equilibration (ns)</label><input type="number" id="equil" value="10" min="0.1" step="1"/></div>
+        <div class="field"><label>equilibration (ns)</label><input type="number" id="equil" value="10" min="0" step="1"/></div>
         <div class="field"><label>production run (ns)</label><input type="number" id="prod" value="100" min="1" step="10"/></div>
         <div class="field">
           <label>timestep (fs)</label>
