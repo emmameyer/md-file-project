@@ -5,7 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MDP Generator</title>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#f4f8ff;--surface:#e6f0ff;--surface2:#d6e6ff;
+      --border:#c3d4f7;--border-hover:#9dbcf0;
+      --text:#1e2a3a;--text-muted:#5b6b80;--text-dim:#8a97a8;
+      --accent:#6ea8fe;--accent-glow:rgba(77,163,255,0.18);
+      --green:#3fb950;--green-glow:rgba(63,185,80,0.12);
+      --amber:#d29922;
+      --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans',sans-serif;
+    }
+    body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
+    .wrapper{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:2rem 1.5rem 4rem}
+    header{border-bottom:1px solid var(--border);padding-bottom:1.5rem;margin-bottom:2rem}
+    .header-top{display:flex;align-items:baseline;gap:1rem;flex-wrap:wrap}
+    .site-title{font-family:var(--mono);font-size:1.4rem;font-weight:500;color:var(--accent);letter-spacing:-.02em}
+    .site-tag{font-family:var(--mono);font-size:.72rem;color:var(--green);border:1px solid var(--green);padding:2px 8px;border-radius:2px;letter-spacing:.06em}
+    .site-desc{margin-top:.4rem;color:var(--text-muted);font-size:.85rem;max-width:580px}
+    .layout{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+    @media(max-width:680px){.layout{grid-template-columns:1fr}}
+    .panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+    .panel-header{padding:.6rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border);font-family:var(--mono);font-size:.72rem;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem}
+    .panel-header .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent-glow)}
+    .panel-body{padding:1.25rem 1rem;display:flex;flex-direction:column;gap:1rem}
+    .field{display:flex;flex-direction:column;gap:4px}
+    .field-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+    label{font-family:var(--mono);font-size:.72rem;color:var(--text-muted);letter-spacing:.05em}
+    select,input[type=number],input[type=text]{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-family:var(--mono);font-size:.82rem;outline:none;width:100%;transition:border-color .15s;appearance:none;-webkit-appearance:none}
+    select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235b6b80'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+    select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+    select:hover,input:hover{border-color:var(--border-hover)}
+    input[type=number]::-webkit-inner-spin-button{opacity:.4}
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+    .toggle-row label{margin:0}
+    .yn-btns{display:flex;gap:4px}
+    .yn-btn{font-family:var(--mono);font-size:.72rem;padding:3px 12px;border:1px solid var(--border);border-radius:3px;background:var(--bg);color:var(--text-muted);cursor:pointer;transition:all .12s}
+    .yn-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .yn-btn:hover:not(.active){border-color:var(--border-hover);color:var(--text)}
+    .sub-fields{display:flex;flex-direction:column;gap:.75rem;padding:.75rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;margin-top:-.25rem}
+    .sub-fields.hidden{display:none}
+    .ff-note{font-family:var(--mono);font-size:.68rem;color:var(--accent);margin-top:2px;min-height:1em}
+    .btn-generate{width:100%;padding:.7rem;background:var(--accent);color:#fff;border:none;border-radius:4px;font-family:var(--mono);font-size:.82rem;font-weight:500;cursor:pointer;letter-spacing:.04em;transition:background .15s,box-shadow .15s;margin-top:.25rem}
+    .btn-generate:hover{background:#4d94f5;box-shadow:0 0 16px var(--accent-glow)}
+    .btn-generate:active{transform:scale(.99)}
+    /* Output panel */
+    .output-panel{grid-column:1/-1}
+    .output-toolbar{padding:.6rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+    .output-toolbar-left{font-family:var(--mono);font-size:.72rem;color:var(--text-muted);letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem}
+    .output-toolbar-left .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green-glow)}
+    .output-toolbar-right{display:flex;gap:.5rem;align-items:center}
+    /* Tabs */
+    .tab-bar{display:flex;gap:2px;padding:.5rem 1rem 0;background:var(--surface2);border-bottom:1px solid var(--border)}
+    .tab-btn{font-family:var(--mono);font-size:.72rem;padding:4px 14px 5px;border:1px solid transparent;border-bottom:none;border-radius:3px 3px 0 0;background:transparent;color:var(--text-muted);cursor:pointer;transition:all .12s;position:relative;bottom:-1px}
+    .tab-btn:hover{color:var(--text);background:var(--surface)}
+    .tab-btn.active{background:var(--bg);border-color:var(--border);color:var(--accent);font-weight:500}
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+    /* Buttons */
+    .btn-copy,.btn-dl{background:transparent;color:var(--text-muted);border:1px solid var(--border);border-radius:4px;padding:3px 12px;font-family:var(--mono);font-size:.72rem;cursor:pointer;transition:color .15s,border-color .15s}
+    .btn-copy:hover,.btn-dl:hover{color:var(--text);border-color:var(--border-hover)}
+    .btn-copy.copied{color:var(--green);border-color:var(--green)}
+    .btn-dl{color:var(--accent);border-color:var(--accent)}
+    .btn-dl:hover{background:var(--accent);color:#fff}
+    .output-code{padding:1.25rem;font-family:var(--mono);font-size:.78rem;line-height:1.75;color:var(--text);white-space:pre;overflow-x:auto;min-height:200px}
+    .line-comment{color:var(--text-dim)}
+    .line-key{color:#2563a8}
+    .line-val{color:#1a7a3a}
+    .line-section{color:var(--amber);font-weight:500}
+    .placeholder{color:var(--text-dim);font-style:italic}
+    footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-family:var(--mono);font-size:.7rem;color:var(--text-dim);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+  </style>
 </head>
 <body>
 <div class="wrapper">
@@ -217,22 +287,11 @@
         <button class="tab-btn" data-tab="npt"  onclick="switchTab('npt')">npt.mdp</button>
         <button class="tab-btn active" data-tab="md" onclick="switchTab('md')">md.mdp</button>
       </div>
-
-      <div id="pane-ions" class="tab-pane">
-        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
-      </div>
-      <div id="pane-em" class="tab-pane">
-        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
-      </div>
-      <div id="pane-nvt" class="tab-pane">
-        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
-      </div>
-      <div id="pane-npt" class="tab-pane">
-        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
-      </div>
-      <div id="pane-md" class="tab-pane active">
-        <div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div>
-      </div>
+      <div id="pane-ions" class="tab-pane"><div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div></div>
+      <div id="pane-em"   class="tab-pane"><div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div></div>
+      <div id="pane-nvt"  class="tab-pane"><div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div></div>
+      <div id="pane-npt"  class="tab-pane"><div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div></div>
+      <div id="pane-md"   class="tab-pane active"><div class="output-code"><span class="placeholder">; Click "generate .mdp files" to populate all tabs</span></div></div>
     </div>
 
   </div>
@@ -243,7 +302,121 @@
   </footer>
 </div>
 
-<script src="parameters.js"></script>
-<script src="app.js"></script>
+<script>
+// =============================================================================
+// PARAMETERS — edit this section to define per-force-field specs for each step
+// Keys marked /* TODO */ use placeholder values — fill in when ready
+// =============================================================================
+const FF = {
+  'BSC1': {
+    note:'PME 1.2 nm, TIP3P, V-rescale, P-R barostat', water:'TIP3P',
+    ions:{ integrator:'steep', nsteps:1000,  coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz' },
+    em:  { integrator:'steep', nsteps:50000, emtol:1000.0, emstep:0.01, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz', constraints:'none' }, /* TODO */
+    nvt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'no',                constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    npt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    md:  { coulomb:'PME', rcoul:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' },
+  },
+  'BSC0': {
+    note:'PME 1.2 nm, TIP3P, V-rescale, P-R barostat', water:'TIP3P',
+    ions:{ integrator:'steep', nsteps:1000,  coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz' }, /* TODO */
+    em:  { integrator:'steep', nsteps:50000, emtol:1000.0, emstep:0.01, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz', constraints:'none' }, /* TODO */
+    nvt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'no',                constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    npt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    md:  { coulomb:'PME', rcoul:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' },
+  },
+  'OL21': {
+    note:'PME 1.2 nm, TIP3P — RNA-optimised', water:'TIP3P',
+    ions:{ integrator:'steep', nsteps:1000,  coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz' }, /* TODO */
+    em:  { integrator:'steep', nsteps:50000, emtol:1000.0, emstep:0.01, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz', constraints:'none' }, /* TODO */
+    nvt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'no',                constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    npt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    md:  { coulomb:'PME', rcoul:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' },
+  },
+  'OL15': {
+    note:'PME 1.2 nm, TIP3P — DNA-optimised', water:'TIP3P',
+    ions:{ integrator:'steep', nsteps:1000,  coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz' }, /* TODO */
+    em:  { integrator:'steep', nsteps:50000, emtol:1000.0, emstep:0.01, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz', constraints:'none' }, /* TODO */
+    nvt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'no',                constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    npt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    md:  { coulomb:'PME', rcoul:1.2, rvdw:1.2, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' },
+  },
+  'CHARMM36m': {
+    note:'PME 1.2 nm, Nose-Hoover, no DispCorr', water:'TIP3P',
+    ions:{ integrator:'steep', nsteps:1000,  coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz' }, /* TODO */
+    em:  { integrator:'steep', nsteps:50000, emtol:1000.0, emstep:0.01, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, pbc:'xyz', constraints:'none' }, /* TODO */
+    nvt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'Nose-Hoover', pcoupl:'no',                constraints:'h-bonds', dispCorr:'no' }, /* TODO */
+    npt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.2, rvdw:1.2, tcoupl:'Nose-Hoover', pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'no' }, /* TODO */
+    md:  { coulomb:'PME', rcoul:1.2, rvdw:1.2, tcoupl:'Nose-Hoover', pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'no' },
+  },
+  'AMBER99SB-ILDN': {
+    note:'PME 1.0 nm cutoffs, TIP3P', water:'TIP3P',
+    ions:{ integrator:'steep', nsteps:1000,  coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, pbc:'xyz' }, /* TODO */
+    em:  { integrator:'steep', nsteps:50000, emtol:1000.0, emstep:0.01, coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, pbc:'xyz', constraints:'none' }, /* TODO */
+    nvt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, tcoupl:'V-rescale',   pcoupl:'no',                constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    npt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    md:  { coulomb:'PME', rcoul:1.0, rvdw:1.0, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' },
+  },
+  'AMBER14SB': {
+    note:'PME 1.0 nm, TIP3P, EnerPres DispCorr', water:'TIP3P',
+    ions:{ integrator:'steep', nsteps:1000,  coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, pbc:'xyz' }, /* TODO */
+    em:  { integrator:'steep', nsteps:50000, emtol:1000.0, emstep:0.01, coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, pbc:'xyz', constraints:'none' }, /* TODO */
+    nvt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, tcoupl:'V-rescale',   pcoupl:'no',                constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    npt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    md:  { coulomb:'PME', rcoul:1.0, rvdw:1.0, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' },
+  },
+  'GROMOS96-54a7': {
+    note:'RF 1.4 nm, SPC water, Berendsen coupling', water:'SPC',
+    ions:{ integrator:'steep', nsteps:1000,  coulombtype:'Reaction-Field', rcoulomb:1.4, rvdw:1.4, pbc:'xyz' }, /* TODO */
+    em:  { integrator:'steep', nsteps:50000, emtol:1000.0, emstep:0.01, coulombtype:'Reaction-Field', rcoulomb:1.4, rvdw:1.4, pbc:'xyz', constraints:'none' }, /* TODO */
+    nvt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'Reaction-Field', rcoulomb:1.4, rvdw:1.4, tcoupl:'Berendsen', pcoupl:'no',        constraints:'h-bonds', dispCorr:'no' }, /* TODO */
+    npt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'Reaction-Field', rcoulomb:1.4, rvdw:1.4, tcoupl:'Berendsen', pcoupl:'Berendsen', constraints:'h-bonds', dispCorr:'no' }, /* TODO */
+    md:  { coulomb:'Reaction-Field', rcoul:1.4, rvdw:1.4, tcoupl:'Berendsen', pcoupl:'Berendsen', constraints:'h-bonds', dispCorr:'no' },
+  },
+  'OPLS-AA': {
+    note:'PME 1.0 nm, TIP4P, EnerPres DispCorr', water:'TIP4P',
+    ions:{ integrator:'steep', nsteps:1000,  coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, pbc:'xyz' }, /* TODO */
+    em:  { integrator:'steep', nsteps:50000, emtol:1000.0, emstep:0.01, coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, pbc:'xyz', constraints:'none' }, /* TODO */
+    nvt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, tcoupl:'V-rescale',   pcoupl:'no',                constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    npt: { integrator:'md', nsteps:50000, dt:0.002, coulombtype:'PME', rcoulomb:1.0, rvdw:1.0, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' }, /* TODO */
+    md:  { coulomb:'PME', rcoul:1.0, rvdw:1.0, tcoupl:'V-rescale',   pcoupl:'Parrinello-Rahman', constraints:'h-bonds', dispCorr:'EnerPres' },
+  },
+};
+
+// =============================================================================
+// APP LOGIC — you shouldn't need to edit below this line
+// =============================================================================
+const TM={pcoupl:{sub:'pcoupl-sub',yes:'pc-yes',no:'pc-no'},tcoupl:{sub:'tcoupl-sub',yes:'tc-yes',no:'tc-no'},rcoulomb:{sub:'rcoulomb-sub',yes:'rc-yes',no:'rc-no'},rvdw:{sub:'rvdw-sub',yes:'rv-yes',no:'rv-no'}};
+let activeTab='md';
+function v(id){return document.getElementById(id).value;}
+function isOn(key){return !document.getElementById(TM[key].sub).classList.contains('hidden');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setSel(id,val){const el=document.getElementById(id);if(!el)return;for(let i=0;i<el.options.length;i++)if(el.options[i].value===val){el.selectedIndex=i;return;}}
+function toggleSection(key,show){const m=TM[key];document.getElementById(m.sub).classList.toggle('hidden',!show);document.getElementById(m.yes).classList.toggle('active',show);document.getElementById(m.no).classList.toggle('active',!show);}
+function applyFFDefaults(){const ff=v('ff');const d=FF[ff];if(!d)return;const md=d.md;setSel('coulomb',md.coulomb);setSel('water',d.water);setSel('tcoupl',md.tcoupl);setSel('pcoupl',md.pcoupl);setSel('constraints',md.constraints);document.getElementById('rcoul').value=md.rcoul;document.getElementById('rvdw').value=md.rvdw;document.getElementById('ff-note').textContent=d.note?'-> '+d.note:'';}
+function buildLines(cb){const L=[];const c=(t)=>L.push({t:'c',x:t});const s=(t)=>L.push({t:'s',x:t});const b=()=>L.push({t:'b'});const kv=(k,val,cm)=>L.push({t:'kv',k,val,cm});cb(c,s,b,kv);return L;}
+function renderLines(L){return L.map(l=>{if(l.t==='b')return '';if(l.t==='c')return '<span class="line-comment">'+esc(l.x)+'</span>';if(l.t==='s')return '<span class="line-section">'+esc(l.x)+'</span>';if(l.t==='kv'){const k=l.k.padEnd(26);const cm=l.cm?'  <span class="line-comment">; '+esc(l.cm)+'</span>':'';return '<span class="line-key">'+esc(k)+'</span>= <span class="line-val">'+esc(l.val)+'</span>'+cm;}return '';}).join('\n');}
+function getCtx(){const ff=v('ff'),system=v('system'),water=v('water'),em=parseInt(v('em')),equil=parseFloat(v('equil')),prod=parseFloat(v('prod')),dt=parseFloat(v('dt')),coulomb=v('coulomb'),cons=v('constraints'),pbc=v('pbc'),usePc=isOn('pcoupl'),useTc=isOn('tcoupl'),useRc=isOn('rcoulomb'),useRv=isOn('rvdw'),pcoupl=usePc?v('pcoupl'):'no',tcoupl=useTc?v('tcoupl'):'no',pres=v('pres'),taup=v('taup'),compress=v('compress'),temp=v('temp'),taut=v('taut'),rcoul=useRc?v('rcoul'):null,rvdw=useRv?v('rvdw'):null,ffData=FF[ff]||{},dispCorr=(ffData.md||{}).dispCorr||'EnerPres';return{ff,system,water,em,equil,prod,dt,coulomb,cons,pbc,usePc,useTc,useRc,useRv,pcoupl,tcoupl,pres,taup,compress,temp,taut,rcoul,rvdw,dispCorr,ffData};}
+
+function generateIons(ctx){const p=ctx.ffData.ions||{};return buildLines((c,s,b,kv)=>{c('; ions.mdp -- generated by mdp-gen');c('; System: '+ctx.system+'  |  Force field: '+ctx.ff+'  |  Water: '+ctx.water);b();s('; Run control (energy minimisation for solvated+ion system)');kv('integrator',p.integrator||'steep');kv('nsteps',p.nsteps||1000,'short min before ion placement');kv('emtol',p.emtol||1000.0,'kJ/mol/nm');kv('emstep',p.emstep||0.01);b();s('; Output');kv('nstxout',0);kv('nstvout',0);kv('nstfout',0);kv('nstlog',500);kv('nstenergy',500);b();s('; Neighbor searching');kv('cutoff-scheme','Verlet');kv('ns_type','grid');kv('nstlist','10');b();s('; Electrostatics');kv('coulombtype',p.coulombtype||ctx.coulomb);if(p.rcoulomb)kv('rcoulomb',p.rcoulomb);if((p.coulombtype||ctx.coulomb)==='PME'){kv('pme_order','4');kv('fourierspacing','0.16');}b();s('; van der Waals');kv('vdwtype','Cut-off');if(p.rvdw)kv('rvdw',p.rvdw);b();s('; Periodic boundary conditions');kv('pbc',p.pbc||ctx.pbc);b();s('; No coupling for ions step');kv('tcoupl','no');kv('pcoupl','no');b();s('; Constraints');kv('constraints','none');});}
+
+function generateEM(ctx){const p=ctx.ffData.em||{};return buildLines((c,s,b,kv)=>{c('; em.mdp -- generated by mdp-gen');c('; System: '+ctx.system+'  |  Force field: '+ctx.ff+'  |  Water: '+ctx.water);b();s('; Run control');kv('integrator',p.integrator||'steep');kv('nsteps',p.nsteps||ctx.em,'max '+ctx.em+' steps');kv('emtol',p.emtol||1000.0,'stop when max force < 1000 kJ/mol/nm');kv('emstep',p.emstep||0.01,'initial step size nm');b();s('; Output');kv('nstxout',0);kv('nstvout',0);kv('nstfout',0);kv('nstlog','500');kv('nstenergy','500');b();s('; Neighbor searching');kv('cutoff-scheme','Verlet');kv('ns_type','grid');kv('nstlist','1');b();s('; Electrostatics');kv('coulombtype',p.coulombtype||ctx.coulomb);if(p.rcoulomb)kv('rcoulomb',p.rcoulomb);if((p.coulombtype||ctx.coulomb)==='PME'){kv('pme_order','4');kv('fourierspacing','0.16');}b();s('; van der Waals');kv('vdwtype','Cut-off');if(p.rvdw)kv('rvdw',p.rvdw);kv('DispCorr',p.dispCorr||ctx.dispCorr);b();s('; Periodic boundary conditions');kv('pbc',p.pbc||ctx.pbc);b();s('; Constraints');kv('constraints',p.constraints||'none');b();s('; No coupling during energy minimisation');kv('tcoupl','no');kv('pcoupl','no');});}
+
+function generateNVT(ctx){const p=ctx.ffData.nvt||{};const equilS=Math.round(ctx.equil*1e6/(ctx.dt*1000));return buildLines((c,s,b,kv)=>{c('; nvt.mdp -- generated by mdp-gen');c('; System: '+ctx.system+'  |  Force field: '+ctx.ff+'  |  Water: '+ctx.water);b();s('; Run control');kv('integrator',p.integrator||'md');kv('nsteps',p.nsteps||equilS,ctx.equil+' ns equilibration (NVT)');kv('dt',p.dt||ctx.dt,(p.dt||ctx.dt)*1000+' fs timestep');b();s('; Output');kv('nstxout-compressed','5000');kv('nstvout','0');kv('nstfout','0');kv('nstlog','5000');kv('nstenergy','5000');b();s('; Neighbor searching');kv('cutoff-scheme','Verlet');kv('ns_type','grid');kv('nstlist','10');if(p.rcoulomb)kv('rlist',p.rcoulomb);b();s('; Electrostatics');kv('coulombtype',p.coulombtype||ctx.coulomb);if(p.rcoulomb)kv('rcoulomb',p.rcoulomb);if((p.coulombtype||ctx.coulomb)==='PME'){kv('pme_order','4');kv('fourierspacing','0.16');}b();s('; van der Waals');kv('vdwtype','Cut-off');if(p.rvdw)kv('rvdw',p.rvdw);kv('DispCorr',p.dispCorr||ctx.dispCorr);b();s('; Temperature coupling — NVT');kv('tcoupl',p.tcoupl||ctx.tcoupl);kv('tc-grps','System');kv('tau_t',ctx.taut);kv('ref_t',ctx.temp);b();s('; No pressure coupling in NVT');kv('pcoupl','no');b();s('; Periodic boundary conditions');kv('pbc',ctx.pbc);b();s('; Constraints');kv('constraints',p.constraints||ctx.cons);kv('constraint_algorithm','LINCS');kv('lincs_iter','1');kv('lincs_order','4');b();s('; Generate velocities');kv('gen_vel','yes');kv('gen_temp',ctx.temp);kv('gen_seed','-1');});}
+
+function generateNPT(ctx){const p=ctx.ffData.npt||{};const equilS=Math.round(ctx.equil*1e6/(ctx.dt*1000));return buildLines((c,s,b,kv)=>{c('; npt.mdp -- generated by mdp-gen');c('; System: '+ctx.system+'  |  Force field: '+ctx.ff+'  |  Water: '+ctx.water);b();s('; Run control');kv('integrator',p.integrator||'md');kv('nsteps',p.nsteps||equilS,ctx.equil+' ns equilibration (NPT)');kv('dt',p.dt||ctx.dt,(p.dt||ctx.dt)*1000+' fs timestep');b();s('; Output');kv('nstxout-compressed','5000');kv('nstvout','0');kv('nstfout','0');kv('nstlog','5000');kv('nstenergy','5000');b();s('; Neighbor searching');kv('cutoff-scheme','Verlet');kv('ns_type','grid');kv('nstlist','10');if(p.rcoulomb)kv('rlist',p.rcoulomb);b();s('; Electrostatics');kv('coulombtype',p.coulombtype||ctx.coulomb);if(p.rcoulomb)kv('rcoulomb',p.rcoulomb);if((p.coulombtype||ctx.coulomb)==='PME'){kv('pme_order','4');kv('fourierspacing','0.16');}b();s('; van der Waals');kv('vdwtype','Cut-off');if(p.rvdw)kv('rvdw',p.rvdw);kv('DispCorr',p.dispCorr||ctx.dispCorr);b();s('; Temperature coupling');kv('tcoupl',p.tcoupl||ctx.tcoupl);kv('tc-grps','System');kv('tau_t',ctx.taut);kv('ref_t',ctx.temp);b();s('; Pressure coupling — NPT');kv('pcoupl',p.pcoupl||ctx.pcoupl);kv('pcoupltype','isotropic');kv('tau_p',ctx.taup);kv('ref_p',ctx.pres);kv('compressibility',ctx.compress);b();s('; Periodic boundary conditions');kv('pbc',ctx.pbc);b();s('; Constraints');kv('constraints',p.constraints||ctx.cons);kv('constraint_algorithm','LINCS');kv('lincs_iter','1');kv('lincs_order','4');b();s('; Continue from NVT — no velocity generation');kv('gen_vel','no');});}
+
+function generateMD(ctx){const prodS=Math.round(ctx.prod*1e6/(ctx.dt*1000)),equilS=Math.round(ctx.equil*1e6/(ctx.dt*1000));return buildLines((c,s,b,kv)=>{c('; md.mdp -- production run -- generated by mdp-gen');c('; System: '+ctx.system+'  |  Force field: '+ctx.ff+'  |  Water: '+ctx.water);b();s('; Run control');kv('integrator','md');kv('nsteps',prodS,ctx.prod+' ns');kv('dt',ctx.dt,ctx.dt*1000+' fs timestep');b();s('; Output control');kv('nstxout-compressed','5000','trajectory every 10 ps');kv('nstvout','0');kv('nstfout','0');kv('nstlog','5000');kv('nstenergy','5000');b();s('; Neighbor searching');kv('cutoff-scheme','Verlet');kv('ns_type','grid');kv('nstlist','10');if(ctx.rcoul)kv('rlist',ctx.rcoul);b();s('; Electrostatics');kv('coulombtype',ctx.coulomb);if(ctx.rcoul)kv('rcoulomb',ctx.rcoul);if(ctx.coulomb==='PME'){kv('pme_order','4');kv('fourierspacing','0.16');}if(ctx.coulomb==='Reaction-Field')kv('epsilon-rf','0','tin-foil BC');b();s('; van der Waals');kv('vdwtype','Cut-off');if(ctx.rvdw)kv('rvdw',ctx.rvdw);kv('DispCorr',ctx.dispCorr);b();s('; Temperature coupling');kv('tcoupl',ctx.tcoupl);if(ctx.useTc){kv('tc-grps','System');kv('tau_t',ctx.taut);kv('ref_t',ctx.temp);}b();s('; Pressure coupling');kv('pcoupl',ctx.pcoupl);if(ctx.usePc){kv('pcoupltype','isotropic');kv('tau_p',ctx.taup);kv('ref_p',ctx.pres);kv('compressibility',ctx.compress);}b();s('; Periodic boundary conditions');kv('pbc',ctx.pbc);b();s('; Constraints');kv('constraints',ctx.cons);kv('constraint_algorithm','LINCS');kv('lincs_iter','1');kv('lincs_order','4');b();c('; Equilibration run: use nsteps = '+equilS+' ('+ctx.equil+' ns)');c('; Energy minimization: use nsteps = '+ctx.em);c('; Water model: '+ctx.water);});}
+
+function switchTab(tab){activeTab=tab;document.querySelectorAll('.tab-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.tab===tab));document.querySelectorAll('.tab-pane').forEach(pane=>pane.classList.toggle('active',pane.id==='pane-'+tab));}
+
+function generate(){const ctx=getCtx();const gens={ions:generateIons,em:generateEM,nvt:generateNVT,npt:generateNPT,md:generateMD};for(const[name,fn]of Object.entries(gens)){const lines=fn(ctx);const pane=document.getElementById('pane-'+name);if(pane)pane.querySelector('.output-code').innerHTML=renderLines(lines);}switchTab(activeTab);}
+
+function copyActive(){const pane=document.getElementById('pane-'+activeTab);const txt=pane?pane.querySelector('.output-code').innerText:'';navigator.clipboard.writeText(txt).then(()=>{const btn=document.getElementById('copybtn');btn.textContent='copied!';btn.classList.add('copied');setTimeout(()=>{btn.textContent='copy';btn.classList.remove('copied');},2000);});}
+
+function downloadActive(){const pane=document.getElementById('pane-'+activeTab);if(!pane)return;const txt=pane.querySelector('.output-code').innerText;const blob=new Blob([txt],{type:'text/plain'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=activeTab+'.mdp';a.click();URL.revokeObjectURL(url);}
+
+applyFFDefaults();
+switchTab('md');
+</script>
 </body>
 </html>
